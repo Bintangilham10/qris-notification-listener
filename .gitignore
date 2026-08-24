@@ -1,9 +1,10 @@
-node_modules/
-.env
-.gopay_cache.json
-.GOPAY_SESI_JANGAN_DIHAPUS.json
-*.log
-*.raw.js
-obfuscate.js
-
+.gradle/
+.idea/
+local.properties
+**/build/
+captures/
+.impeccable/review/
+*.iml
+*.jks
+*.keystore
 
