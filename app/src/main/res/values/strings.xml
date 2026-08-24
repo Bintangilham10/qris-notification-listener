@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QRIS Listener</string>
+    <string name="listener_service_name">Listener notifikasi QRIS</string>
+    <string name="privacy_summary">Membaca pembayaran GoPay Merchant di perangkat ini. Tidak ada data yang dikirim ke server.</string>
+    <string name="readiness_title">Kesiapan listener</string>
+    <string name="notification_access_label">Akses notifikasi</string>
+    <string name="listener_connection_label">Koneksi listener</string>
+    <string name="status_checking">Memeriksa</string>
+    <string name="status_active">Aktif</string>
+    <string name="status_inactive">Belum aktif</string>
+    <string name="status_connected">Terhubung</string>
+    <string name="status_waiting_permission">Menunggu akses</string>
+    <string name="status_waiting_connection">Menunggu koneksi Android</string>
+    <string name="open_notification_settings">Buka pengaturan akses</string>
+    <string name="review_notification_settings">Periksa pengaturan akses</string>
+    <string name="latest_payment_title">Pembayaran terakhir</string>
+    <string name="no_payment_yet">Belum ada pembayaran</string>
+    <string name="test_payment_hint">Aktifkan akses, lalu coba pembayaran QRIS Rp1.</string>
+    <string name="test_payment_ready_hint">Listener siap. Coba pembayaran QRIS Rp1.</string>
+    <string name="history_title">Riwayat lokal</string>
+    <string name="clear_history">Hapus</string>
+    <string name="empty_history_message">Pembayaran yang berhasil dikenali akan tersimpan di sini, meski layar aplikasi ditutup.</string>
+    <string name="diagnostic_zero">Notifikasi QRIS yang formatnya tidak dikenali: 0</string>
+    <string name="diagnostic_count">Notifikasi QRIS yang formatnya tidak dikenali: %1$d</string>
+    <string name="local_only_note">Riwayat ini hanya tersimpan di QRIS Listener. Menghapusnya tidak mengubah data transaksi di GoPay Merchant.</string>
+    <string name="storage_error_message">Riwayat lokal belum dapat dibaca. Tutup lalu buka kembali aplikasi; jika tetap muncul, instal ulang APK.</string>
+    <string name="clear_history_title">Hapus riwayat lokal?</string>
+    <string name="clear_history_message">Semua pembayaran di QRIS Listener akan dihapus. Riwayat di GoPay Merchant tidak terpengaruh.</string>
+    <string name="cancel">Batal</string>
+    <string name="confirm_clear">Hapus riwayat</string>
+</resources>
