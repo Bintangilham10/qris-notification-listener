@@ -79,6 +79,12 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        if (
+            NotificationAccess.isGranted(this) &&
+            !GopayNotificationListenerService.isConnected()
+        ) {
+            runCatching { GopayNotificationListenerService.requestConnection(this) }
+        }
         refreshScreen()
     }
 
@@ -137,7 +143,7 @@ class MainActivity : Activity() {
 
     private fun renderListenerState() {
         val accessGranted = NotificationAccess.isGranted(this)
-        val connected = accessGranted && GopayNotificationListenerService.isConnected(this)
+        val connected = accessGranted && GopayNotificationListenerService.isConnected()
 
         renderStatus(
             accessStatus,
@@ -150,7 +156,7 @@ class MainActivity : Activity() {
             text = getString(
                 when {
                     connected -> R.string.status_connected
-                    accessGranted -> R.string.status_waiting_connection
+                    accessGranted -> R.string.status_reconnecting
                     else -> R.string.status_waiting_permission
                 },
             ),
