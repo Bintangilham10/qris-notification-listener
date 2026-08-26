@@ -18,6 +18,7 @@ class GopayNotificationListenerService : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
+        connected = false
         repository = SqlitePaymentRepository(applicationContext)
         processor = PaymentNotificationProcessor(repository)
         executor = Executors.newSingleThreadExecutor()
@@ -25,12 +26,13 @@ class GopayNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        setConnected(this, true)
+        connected = true
         broadcastStateChanged()
+        processActiveGopayNotifications()
     }
 
     override fun onListenerDisconnected() {
-        setConnected(this, false)
+        connected = false
         broadcastStateChanged()
         requestRebind(ComponentName(this, GopayNotificationListenerService::class.java))
         super.onListenerDisconnected()
@@ -41,23 +43,12 @@ class GopayNotificationListenerService : NotificationListenerService() {
             return
         }
 
-        val extras = statusBarNotification.notification.extras
-        val payload = NotificationPayload(
-            packageName = statusBarNotification.packageName,
-            notificationKey = statusBarNotification.key.orEmpty(),
-            postedAt = statusBarNotification.postTime,
-            title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty(),
-            body = (
-                extras.getCharSequence(Notification.EXTRA_TEXT)
-                    ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
-                )?.toString().orEmpty(),
-        )
-
+        val payload = statusBarNotification.toPayload()
         executor.execute { processPayload(payload) }
     }
 
     override fun onDestroy() {
-        setConnected(this, false)
+        connected = false
         broadcastStateChanged()
         if (::executor.isInitialized && ::repository.isInitialized) {
             executor.execute { repository.close() }
@@ -76,11 +67,7 @@ class GopayNotificationListenerService : NotificationListenerService() {
 
                 ProcessResult.Duplicate -> Unit
                 ProcessResult.Ignored -> {
-                    if (payload.title.trim().equals(
-                            PaymentNotificationParser.STATIC_QRIS_TITLE,
-                            ignoreCase = true,
-                        )
-                    ) {
+                    if (PaymentNotificationParser.isPaymentLikeTitle(payload.title)) {
                         incrementIgnoredPayloadCount(this)
                         broadcastStateChanged()
                     }
@@ -93,6 +80,34 @@ class GopayNotificationListenerService : NotificationListenerService() {
         }
     }
 
+    private fun processActiveGopayNotifications() {
+        val payloads = runCatching { activeNotifications.orEmpty() }
+            .onFailure { error -> Log.w(TAG, "Unable to read active notifications after reconnect", error) }
+            .getOrDefault(emptyArray())
+            .filter { it.packageName == PaymentNotificationParser.GOPAY_MERCHANT_PACKAGE }
+            .sortedBy { it.postTime }
+            .map { it.toPayload() }
+
+        if (payloads.isEmpty()) return
+        executor.execute {
+            payloads.forEach(::processPayload)
+        }
+    }
+
+    private fun StatusBarNotification.toPayload(): NotificationPayload {
+        val extras = notification.extras
+        val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
+        val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
+
+        return NotificationPayload(
+            packageName = packageName,
+            notificationKey = key.orEmpty(),
+            postedAt = postTime,
+            title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty(),
+            body = bigText.takeIf { it.isNotBlank() } ?: text,
+        )
+    }
+
     private fun broadcastStateChanged() {
         sendBroadcast(Intent(ACTION_STATE_CHANGED).setPackage(packageName))
     }
@@ -101,22 +116,24 @@ class GopayNotificationListenerService : NotificationListenerService() {
         const val ACTION_STATE_CHANGED = "id.ciganstore.qrislistener.PAYMENT_HISTORY_CHANGED"
         private const val TAG = "QrisListener"
         private const val PREFERENCES_NAME = "listener_diagnostics"
-        private const val KEY_CONNECTED = "connected"
         private const val KEY_IGNORED_PAYLOAD_COUNT = "ignored_payload_count"
         private const val KEY_STORAGE_ERROR = "storage_error"
+        @Volatile
+        private var connected = false
 
-        fun isConnected(context: Context): Boolean = preferences(context)
-            .getBoolean(KEY_CONNECTED, false)
+        fun isConnected(): Boolean = connected
+
+        fun requestConnection(context: Context) {
+            NotificationListenerService.requestRebind(
+                ComponentName(context.applicationContext, GopayNotificationListenerService::class.java),
+            )
+        }
 
         fun ignoredPayloadCount(context: Context): Long = preferences(context)
             .getLong(KEY_IGNORED_PAYLOAD_COUNT, 0L)
 
         fun hasStorageError(context: Context): Boolean = preferences(context)
             .getBoolean(KEY_STORAGE_ERROR, false)
-
-        private fun setConnected(context: Context, connected: Boolean) {
-            preferences(context).edit().putBoolean(KEY_CONNECTED, connected).apply()
-        }
 
         private fun incrementIgnoredPayloadCount(context: Context) {
             val prefs = preferences(context)
