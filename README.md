@@ -58,6 +58,8 @@ Aktivitas QRIS Listener boleh ditutup. Android tetap mengikat layanan notifikasi
 
 Jika pembayaran tidak muncul, periksa kembali akses notifikasi. Pada ponsel yang agresif membatasi aplikasi latar belakang, buka pengaturan baterai aplikasi dan ubah penggunaan baterai GoPay Merchant serta QRIS Listener menjadi **Tidak dibatasi** atau **Unrestricted**, lalu ulangi tes.
 
+Pada Xiaomi, Redmi, atau POCO dengan MIUI/HyperOS, aktifkan juga **Mulai otomatis/Autostart**, kunci QRIS Listener di layar aplikasi terbaru, dan jangan menutupnya melalui **Pembersih/One-tap clean**. Pembersih HyperOS dapat mematikan listener meskipun halaman akses notifikasi masih menunjukkan izin aktif. Setelah pembersihan atau restart ponsel, buka QRIS Listener dan pastikan status berubah dari **Menghubungkan ulang** menjadi **Terhubung** sebelum menerima pembayaran.
+
 ## Riwayat lokal
 
 - Tombol **Hapus** menghapus seluruh riwayat yang disimpan QRIS Listener setelah konfirmasi.
