@@ -3,6 +3,7 @@ package id.ciganstore.qrislistener.data
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 
 class SqlitePaymentRepository(context: Context) :
@@ -35,12 +36,16 @@ class SqlitePaymentRepository(context: Context) :
             put(COLUMN_RECEIVED_AT, event.receivedAt)
             put(COLUMN_SOURCE_PACKAGE, event.sourcePackage)
         }
-        return writableDatabase.insertWithOnConflict(
+        val insertedRowId = writableDatabase.insertWithOnConflict(
             TABLE_PAYMENTS,
             null,
             values,
             SQLiteDatabase.CONFLICT_IGNORE,
-        ) != -1L
+        )
+        if (insertedRowId != -1L) return true
+        if (containsEvent(event.eventId)) return false
+
+        throw SQLiteException("Payment event was not inserted and no duplicate exists")
     }
 
     override fun listNewest(limit: Int): List<PaymentEvent> {
@@ -98,6 +103,17 @@ class SqlitePaymentRepository(context: Context) :
         }
     }
 
+    private fun containsEvent(eventId: String): Boolean = readableDatabase.query(
+        TABLE_PAYMENTS,
+        arrayOf(COLUMN_EVENT_ID),
+        "$COLUMN_EVENT_ID = ?",
+        arrayOf(eventId),
+        null,
+        null,
+        null,
+        "1",
+    ).use { cursor -> cursor.moveToFirst() }
+
     private companion object {
         const val DATABASE_NAME = "qris_listener.db"
         const val DATABASE_VERSION = 1
@@ -111,4 +127,3 @@ class SqlitePaymentRepository(context: Context) :
         const val COLUMN_SOURCE_PACKAGE = "source_package"
     }
 }
-
