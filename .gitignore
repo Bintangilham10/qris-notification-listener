@@ -7,4 +7,5 @@ captures/
 *.iml
 *.jks
 *.keystore
+keystore.properties
 
