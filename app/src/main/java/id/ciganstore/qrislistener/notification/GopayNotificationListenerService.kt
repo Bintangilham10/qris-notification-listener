@@ -8,6 +8,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import id.ciganstore.qrislistener.data.SqlitePaymentRepository
+import id.ciganstore.qrislistener.upload.UploadScheduler
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -28,6 +29,10 @@ class GopayNotificationListenerService : NotificationListenerService() {
         super.onListenerConnected()
         connected = true
         broadcastStateChanged()
+        // Keeps the periodic upload + heartbeat alive and flushes events left pending while the
+        // process was dead (for example after HyperOS cleanup or a reboot).
+        runCatching { UploadScheduler.ensureScheduled(applicationContext) }
+            .onFailure { error -> Log.w(TAG, "Unable to schedule payment uploads", error) }
         processActiveGopayNotifications()
     }
 
@@ -39,7 +44,10 @@ class GopayNotificationListenerService : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(statusBarNotification: StatusBarNotification) {
-        if (statusBarNotification.packageName != PaymentNotificationParser.GOPAY_MERCHANT_PACKAGE) {
+        if (!PaymentNotificationFilter.isFromGopayMerchant(statusBarNotification.packageName)) {
+            return
+        }
+        if (PaymentNotificationFilter.isGroupSummary(statusBarNotification.notificationFlags())) {
             return
         }
 
@@ -63,6 +71,9 @@ class GopayNotificationListenerService : NotificationListenerService() {
                 is ProcessResult.Accepted -> {
                     setStorageError(this, false)
                     broadcastStateChanged()
+                    // The event is already committed to SQLite; the worker delivers it from there,
+                    // so nothing is lost if the phone is offline or the upload fails.
+                    requestUpload()
                 }
 
                 ProcessResult.Duplicate -> Unit
@@ -84,7 +95,8 @@ class GopayNotificationListenerService : NotificationListenerService() {
         val payloads = runCatching { activeNotifications.orEmpty() }
             .onFailure { error -> Log.w(TAG, "Unable to read active notifications after reconnect", error) }
             .getOrDefault(emptyArray())
-            .filter { it.packageName == PaymentNotificationParser.GOPAY_MERCHANT_PACKAGE }
+            .filter { PaymentNotificationFilter.isFromGopayMerchant(it.packageName) }
+            .filterNot { PaymentNotificationFilter.isGroupSummary(it.notificationFlags()) }
             .sortedBy { it.postTime }
             .map { it.toPayload() }
 
@@ -93,6 +105,13 @@ class GopayNotificationListenerService : NotificationListenerService() {
             payloads.forEach(::processPayload)
         }
     }
+
+    private fun requestUpload() {
+        runCatching { UploadScheduler.uploadNow(applicationContext) }
+            .onFailure { error -> Log.w(TAG, "Unable to schedule payment upload", error) }
+    }
+
+    private fun StatusBarNotification.notificationFlags(): Int = notification?.flags ?: 0
 
     private fun StatusBarNotification.toPayload(): NotificationPayload {
         val extras = notification.extras

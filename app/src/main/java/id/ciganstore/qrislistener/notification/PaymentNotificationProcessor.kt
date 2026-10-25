@@ -11,6 +11,7 @@ sealed interface ProcessResult {
 
 class PaymentNotificationProcessor(
     private val repository: PaymentRepository,
+    private val clock: () -> Long = System::currentTimeMillis,
 ) {
     fun process(payload: NotificationPayload): ProcessResult {
         val parsed = PaymentNotificationParser.parse(payload) ?: return ProcessResult.Ignored
@@ -19,7 +20,8 @@ class PaymentNotificationProcessor(
             type = PaymentEvent.TYPE_QRIS_STATIC_PAYMENT,
             amount = parsed.amount,
             merchant = parsed.merchant,
-            receivedAt = payload.postedAt,
+            postedAt = payload.postedAt,
+            capturedAt = clock(),
             sourcePackage = payload.packageName,
         )
 
