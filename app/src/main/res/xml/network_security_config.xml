@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Release and default policy: HTTPS only, trusting the system certificate store only.
+The debug build type overrides this file (app/src/debug/res/xml) to allow plain HTTP to the
+emulator host and loopback addresses used with `wrangler dev`.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
