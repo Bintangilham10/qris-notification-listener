@@ -21,9 +21,15 @@ android {
         applicationId = "id.ciganstore.qrislistener"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         testInstrumentationRunner = "android.test.InstrumentationTestRunner"
+    }
+
+    buildFeatures {
+        // BuildConfig.VERSION_NAME is sent as X-QRIS-App-Version and BuildConfig.DEBUG gates the
+        // emulator/loopback HTTP exception. Never put the listener secret in BuildConfig.
+        buildConfig = true
     }
 
     signingConfigs {
@@ -49,5 +55,6 @@ android {
 }
 
 dependencies {
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
     testImplementation("junit:junit:4.13.2")
 }
