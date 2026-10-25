@@ -18,14 +18,18 @@ class PaymentNotificationProcessorTest {
     @Test
     fun `first valid notification is accepted with parsed fields`() {
         val repository = FakePaymentRepository()
-        val result = PaymentNotificationProcessor(repository).process(validPayload)
+        val captureTime = validPayload.postedAt + 90_000
+        val result = PaymentNotificationProcessor(repository) { captureTime }.process(validPayload)
 
         assertTrue(result is ProcessResult.Accepted)
         val event = (result as ProcessResult.Accepted).event
         assertEquals(25_000L, event.amount)
         assertEquals("CiganStore, Digital & Kreatif", event.merchant)
-        assertEquals(validPayload.postedAt, event.receivedAt)
+        // The notification post time is what the server receives as occurredAt.
+        assertEquals(validPayload.postedAt, event.postedAt)
+        assertEquals(captureTime, event.capturedAt)
         assertEquals(PaymentEvent.TYPE_QRIS_STATIC_PAYMENT, event.type)
+        assertEquals(PaymentNotificationParser.GOPAY_MERCHANT_PACKAGE, event.sourcePackage)
     }
 
     @Test
@@ -56,7 +60,7 @@ class PaymentNotificationProcessorTest {
             events.putIfAbsent(event.eventId, event) == null
 
         override fun listNewest(limit: Int): List<PaymentEvent> =
-            events.values.sortedByDescending { it.receivedAt }.take(limit)
+            events.values.sortedByDescending { it.postedAt }.take(limit)
 
         override fun clear() {
             events.clear()
