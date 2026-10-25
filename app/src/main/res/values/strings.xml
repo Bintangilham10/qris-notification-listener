@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">QRIS Listener</string>
     <string name="listener_service_name">Listener notifikasi QRIS</string>
-    <string name="privacy_summary">Membaca pembayaran GoPay Merchant di perangkat ini. Tidak ada data yang dikirim ke server.</string>
+    <string name="privacy_summary">Membaca pembayaran GoPay Merchant di perangkat ini, menyimpannya di HP, lalu mengirim nominal dan waktunya ke server CiganStore lewat HTTPS bertanda tangan.</string>
     <string name="readiness_title">Kesiapan listener</string>
     <string name="notification_access_label">Akses notifikasi</string>
     <string name="listener_connection_label">Koneksi listener</string>
@@ -23,10 +23,105 @@
     <string name="empty_history_message">Pembayaran yang berhasil dikenali akan tersimpan di sini, meski layar aplikasi ditutup.</string>
     <string name="diagnostic_zero">Notifikasi pembayaran GoPay yang formatnya tidak dikenali: 0</string>
     <string name="diagnostic_count">Notifikasi pembayaran GoPay yang formatnya tidak dikenali: %1$d</string>
-    <string name="local_only_note">Riwayat ini hanya tersimpan di QRIS Listener. Menghapusnya tidak mengubah data transaksi di GoPay Merchant.</string>
+    <string name="local_only_note">Riwayat ini tersimpan di QRIS Listener. Menghapusnya tidak mengubah data transaksi di GoPay Merchant maupun data di server CiganStore.</string>
     <string name="storage_error_message">Riwayat lokal belum dapat dibaca. Tutup lalu buka kembali aplikasi; jika tetap muncul, instal ulang APK.</string>
     <string name="clear_history_title">Hapus riwayat lokal?</string>
-    <string name="clear_history_message">Semua pembayaran di QRIS Listener akan dihapus. Riwayat di GoPay Merchant tidak terpengaruh.</string>
+    <string name="clear_history_message">Pembayaran yang sudah terkirim atau ditolak server akan dihapus dari QRIS Listener. Pastikan pembayaran yang ditolak sudah dicocokkan manual di admin. Pembayaran yang masih menunggu dikirim tetap disimpan. GoPay Merchant dan server CiganStore tidak terpengaruh.</string>
     <string name="cancel">Batal</string>
     <string name="confirm_clear">Hapus riwayat</string>
+
+    <!-- Pengiriman ke server (uploader) -->
+    <string name="upload_title">Pengiriman ke server</string>
+    <string name="upload_status_label">Status pengiriman</string>
+    <string name="upload_status_not_configured">Belum diatur</string>
+    <string name="upload_status_secret_unavailable">Secret perlu diisi ulang</string>
+    <string name="upload_status_stopped">Berhenti: periksa pengaturan</string>
+    <string name="upload_status_retrying">Mencoba ulang otomatis</string>
+    <string name="upload_status_active">Aktif</string>
+    <string name="upload_target">Server: %1$s\nID perangkat: %2$s</string>
+    <string name="upload_target_missing">Isi alamat server, ID perangkat, dan secret agar pembayaran dikirim ke server.</string>
+    <string name="upload_last_delivered">Terakhir terkirim: %1$s</string>
+    <string name="upload_never_delivered">Belum ada pembayaran yang terkirim.</string>
+    <string name="upload_last_heartbeat">Heartbeat terakhir diterima server: %1$s</string>
+    <string name="upload_no_heartbeat">Heartbeat belum pernah diterima server.</string>
+    <string name="upload_counts">Menunggu dikirim: %1$d · Ditolak server: %2$d</string>
+    <string name="upload_counts_unknown">Jumlah antrean belum dapat dibaca.</string>
+    <string name="upload_last_problem">Masalah terakhir (%1$s): %2$s</string>
+    <string name="upload_clock_warning">Jam HP selisih sekitar %1$s dari jam server. Aktifkan Tanggal &amp; waktu otomatis di pengaturan HP; selisih lebih dari 5 menit membuat pembayaran tertahan.</string>
+    <!-- Indonesian has no plural forms; "one" only satisfies devices set to other languages. -->
+    <plurals name="duration_minutes">
+        <item quantity="one">%1$d menit</item>
+        <item quantity="other">%1$d menit</item>
+    </plurals>
+    <plurals name="duration_seconds">
+        <item quantity="one">%1$d detik</item>
+        <item quantity="other">%1$d detik</item>
+    </plurals>
+
+    <string name="upload_problem_network">Tidak ada internet atau server tidak dapat dihubungi. Pembayaran tetap tersimpan di HP dan dikirim otomatis saat koneksi kembali.</string>
+    <string name="upload_problem_clock">Jam HP salah (selisih lebih dari 5 menit dari server). Aktifkan Tanggal &amp; waktu otomatis di pengaturan HP. Pengiriman diulang otomatis.</string>
+    <string name="upload_problem_auth">Server menolak ID perangkat atau secret. Periksa keduanya, lalu simpan ulang pengaturan. Pengiriman otomatis berhenti sampai pengaturan diubah.</string>
+    <string name="upload_problem_wrong_server">Alamat server tidak menjawab seperti server CiganStore (%1$s). Periksa alamat server. Pengiriman diulang otomatis.</string>
+    <string name="upload_problem_server_busy">Server sedang sibuk atau gangguan (%1$s). Pengiriman diulang otomatis.</string>
+    <string name="upload_problem_unexpected">Jawaban server tidak dikenali (%1$s). Pengiriman diulang otomatis.</string>
+    <string name="upload_problem_replayed">Server menganggap permintaan terkirim dua kali. Pengiriman diulang otomatis dengan tanda tangan baru.</string>
+    <string name="upload_problem_rejected">Server menolak notifikasi pembayaran: %1$s. Pembayaran itu ditandai ditolak dan tidak dikirim ulang; cocokkan manual di admin.</string>
+    <string name="upload_problem_secret_unavailable">Secret yang tersimpan tidak dapat dibuka di HP ini. Masukkan ulang secret, lalu simpan.</string>
+
+    <string name="reject_reason_untrusted">nama merchant atau judul notifikasi tidak cocok dengan pengaturan server</string>
+    <string name="reject_reason_time">waktu pembayaran di luar rentang yang diterima server (lebih dari 24 jam lalu, atau jam HP salah)</string>
+    <string name="reject_reason_too_large">data terlalu besar</string>
+    <string name="reject_reason_format">format data ditolak</string>
+    <string name="reject_reason_unsupported">jenis notifikasi tidak didukung</string>
+    <string name="reject_reason_invalid">isi notifikasi tidak valid</string>
+
+    <string name="history_status_uploaded">Terkirim ke server</string>
+    <string name="history_status_matched">Terkirim · cocok dengan pesanan</string>
+    <string name="history_status_review">Terkirim · perlu dicek di admin</string>
+    <string name="history_status_unmatched">Terkirim · belum cocok dengan pesanan</string>
+    <string name="history_status_duplicate">Terkirim · terdeteksi ganda, cek di admin</string>
+    <string name="history_status_pending">Menunggu dikirim</string>
+    <plurals name="history_status_retrying">
+        <item quantity="one">Menunggu dikirim ulang (sudah %1$d kali dicoba)</item>
+        <item quantity="other">Menunggu dikirim ulang (sudah %1$d kali dicoba)</item>
+    </plurals>
+    <string name="history_status_blocked">Tertahan: periksa ID perangkat dan secret</string>
+    <string name="history_status_failed">Ditolak server: %1$s. Cocokkan manual di admin.</string>
+
+    <string name="retry_upload_now">Kirim ulang sekarang</string>
+    <string name="test_connection">Tes koneksi</string>
+    <string name="upload_retry_started">Pengiriman dimulai. Status di atas diperbarui otomatis.</string>
+    <string name="upload_retry_offline">Belum ada internet. Pembayaran dikirim otomatis begitu internet tersambung.</string>
+    <string name="upload_retry_failed">Pengiriman belum dapat dijadwalkan. Coba lagi sebentar.</string>
+    <string name="test_connection_running">Menguji koneksi ke server…</string>
+    <string name="test_connection_ok">Terhubung. Server menerima heartbeat dari HP ini.</string>
+    <string name="test_connection_ok_clock">Terhubung, tetapi jam HP selisih sekitar %1$s dari jam server. Aktifkan Tanggal &amp; waktu otomatis.</string>
+    <string name="test_connection_not_configured">Simpan alamat server, ID perangkat, dan secret terlebih dahulu.</string>
+    <string name="test_connection_busy">Pengiriman lain sedang berjalan. Coba lagi sebentar.</string>
+    <string name="test_connection_failed">Tes gagal. %1$s</string>
+    <string name="test_connection_error">Tes koneksi belum dapat dijalankan. Coba lagi sebentar.</string>
+
+    <!-- Pengaturan server -->
+    <string name="edit_server_settings">Ubah pengaturan server</string>
+    <string name="hide_server_settings">Tutup pengaturan server</string>
+    <string name="server_url_label">Alamat server</string>
+    <string name="device_id_label">ID perangkat</string>
+    <string name="secret_label">Secret listener</string>
+    <string name="secret_state_saved">Secret tersimpan. Biarkan kolom secret kosong bila tidak diganti.</string>
+    <string name="secret_state_missing">Belum ada secret. Tempel LISTENER_SHARED_SECRET di kolom secret.</string>
+    <!-- The dashes are part of a literal command and must stay ASCII. -->
+    <string name="settings_help" tools:ignore="TypographyDashes">ID perangkat harus sama dengan LISTENER_DEVICE_ID di wrangler.jsonc. Secret adalah LISTENER_SHARED_SECRET dari npm run secrets:production -- --listener. Secret disimpan terenkripsi dan tidak ditampilkan lagi.</string>
+    <string name="settings_debug_note">Build debug: http://10.0.2.2, http://127.0.0.1, dan http://localhost juga diizinkan untuk tes lokal.</string>
+    <string name="save_settings">Simpan pengaturan</string>
+    <string name="settings_saving">Menyimpan pengaturan…</string>
+    <string name="settings_saved">Pengaturan tersimpan. Tekan Tes koneksi untuk memeriksanya.</string>
+    <string name="settings_save_failed">Pengaturan belum tersimpan: secret tidak dapat diamankan di Keystore HP ini. Coba lagi.</string>
+    <string name="error_url_empty">Isi alamat server, misalnya https://ciganstore.ai.id.</string>
+    <string name="error_url_malformed">Alamat server tidak valid.</string>
+    <string name="error_url_not_https">Alamat server wajib diawali https://.</string>
+    <string name="error_url_credentials">Alamat server tidak boleh berisi nama pengguna atau kata sandi.</string>
+    <string name="error_url_path">Isi alamat server saja tanpa path, misalnya https://ciganstore.ai.id.</string>
+    <string name="error_device_id">ID perangkat 3–64 karakter: huruf, angka, tanda - atau _.</string>
+    <string name="error_secret_required">Masukkan secret listener.</string>
+    <string name="error_secret_invalid">Secret tidak valid. Tempel LISTENER_SHARED_SECRET persis seperti yang ditampilkan saat dibuat.</string>
 </resources>
